@@ -81,7 +81,7 @@ A robust, production-ready middleware integrating **Leafnet POS** and **NocoDB**
 | `opt_status` | `opt_status` | Custom Property | Consent status; suppresses if set to `unsubscribed`. |
 
 ### Contact Tags Applied Automatically
-- `retail`, `leafnet`
+- `retail`, `Leafnet`
 - `store:{favorite_location}` (e.g. `store:red-bank`)
 - `first-time-buyer` (`order_count == 1`)
 - `repeat-customer` (`order_count >= 2`)

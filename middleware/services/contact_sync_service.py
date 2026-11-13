@@ -129,7 +129,7 @@ class ContactSyncService:
             )
 
         # Tags for Omnisend Segments & Journeys (Goal 5 & Goal 6)
-        tags = ["retail", "leafnet"]
+        tags = ["retail", "Leafnet"]
 
         # Store tag (Per-location segments)
         home_store = (customer.favorite_location or "").strip()

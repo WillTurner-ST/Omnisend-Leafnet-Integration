@@ -252,7 +252,7 @@ class WebhookService:
                 if phone:
                     identifiers.append(OmnisendIdentifier(type="phone", id=phone))
 
-                contact_tags = ["retail", "leafnet", "active-customer"]
+                contact_tags = ["retail", "Leafnet", "active-customer"]
                 if payload.location:
                     contact_tags.append(f"store:{payload.location.strip().lower()}")
                 for b in rec_meta["all_buckets"]:

@@ -80,7 +80,7 @@ Once the Big 3 have run cleanly for a week:
 To create each segment, go to **Omnisend $\rightarrow$ Audience $\rightarrow$ Segments $\rightarrow$ Create Segment $\rightarrow$ Filter Contacts** and enter the exact rule below:
 
 ### Segment 1: All Retail Customers
-* **Rule:** `Tag` $\rightarrow$ `is` $\rightarrow$ `leafnet`
+* **Rule:** `Tag` $\rightarrow$ `is` $\rightarrow$ `Leafnet`
 * **Use for:** Sending retail-wide announcements or excluding in-store buyers from online-only promos.
 
 ### Segment 2: New In-Store Loyalty Signups (Last 7 Days)

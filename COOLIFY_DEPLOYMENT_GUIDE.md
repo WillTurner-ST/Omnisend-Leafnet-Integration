@@ -135,7 +135,7 @@ curl -X POST "https://middleware.yourdomain.com/api/sync/run?full=false"
   "success": true
 }
 ```
-*Verify in Omnisend:* Open Omnisend $\rightarrow$ **Audience** $\rightarrow$ **Contacts** and confirm the contacts appear with tags (`leafnet`, `retail`, `store:...`) and custom properties.
+*Verify in Omnisend:* Open Omnisend $\rightarrow$ **Audience** $\rightarrow$ **Contacts** and confirm the contacts appear with tags (`Leafnet`, `retail`, `store:...`) and custom properties.
 
 ---
 

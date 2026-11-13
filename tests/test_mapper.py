@@ -54,7 +54,7 @@ def test_contact_mapper_full_record():
 
     # Tags check (Goal 5)
     assert "retail" in omnisend_payload.tags
-    assert "leafnet" in omnisend_payload.tags
+    assert "Leafnet" in omnisend_payload.tags
     assert "store:red-bank" in omnisend_payload.tags
     assert "repeat-customer" in omnisend_payload.tags
     assert "vip" in omnisend_payload.tags
