@@ -240,9 +240,9 @@ Once started, explore the interactive OpenAPI documentation at `http://localhost
 Build and run from the Dockerfile:
 ```bash
 docker build -t leafnet-omnisend-middleware .
-docker run -d --name leafnet-omnisend-middleware --restart unless-stopped -p 8000:8000 --env-file .env -e DB_PATH=/app/data/middleware.db -v middleware-data:/app/data leafnet-omnisend-middleware
+docker run -d --name leafnet-omnisend-middleware --restart unless-stopped -p 18743:18743 --env-file .env -e PORT=18743 -e DB_PATH=/app/data/middleware.db -v middleware-data:/app/data leafnet-omnisend-middleware
 ```
-The service listens on port 8000. The SQLite database is stored in the `middleware-data` volume.
+The service listens on port 18743. The SQLite database is stored in the `middleware-data` volume.
 
 ---
 

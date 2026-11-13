@@ -34,7 +34,7 @@ Before deploying in Coolify, ensure you have:
 6. Enter your repository URL (e.g. `https://github.com/your-org/leafnet-omnisend-middleware` or your internal Gitea URL) and branch `main`.
 7. **Build Pack:** Coolify detects the `Dockerfile` because the repository has no Compose file.
    - Set the Build Pack to **Dockerfile** if the scan has not already selected it.
-   - **Port Exposes:** Enter `8000`.
+   - **Port Exposes:** Enter `18743`.
 
 ---
 
@@ -45,7 +45,7 @@ In your application's settings in Coolify, go to the **Environment Variables** t
 ```env
 # Server Configuration
 HOST=0.0.0.0
-PORT=8000
+PORT=18743
 ENVIRONMENT=production
 LOG_LEVEL=INFO
 SYNC_INTERVAL_HOURS=24
