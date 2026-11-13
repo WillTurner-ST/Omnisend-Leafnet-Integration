@@ -12,6 +12,13 @@ if not dotenv_path.exists():
 load_dotenv(dotenv_path)
 
 
+def _env_bool(name: str, default: bool) -> bool:
+    raw = os.getenv(name)
+    if raw is None or str(raw).strip() == "":
+        return default
+    return str(raw).strip().lower() in {"1", "true", "yes", "on"}
+
+
 class Settings(BaseModel):
     # Application settings
     app_name: str = "Leafnet-NocoDB to Omnisend Middleware"
@@ -52,6 +59,13 @@ class Settings(BaseModel):
 
     # VIP spend threshold cutoff for tag segmentation
     vip_spend_threshold: float = Field(default_factory=lambda: float(os.getenv("VIP_SPEND_THRESHOLD", "500.0")))
+
+    # Contacts-only mode upserts Leafnet customers into Omnisend and does not
+    # post orders or custom events, so Omnisend automations are not started.
+    contacts_only: bool = Field(default_factory=lambda: _env_bool("CONTACTS_ONLY", True))
+
+    # Loyalty tags, milestone emails, and /api/loyalty stay off until enabled.
+    loyalty_enabled: bool = Field(default_factory=lambda: _env_bool("LOYALTY_ENABLED", False))
 
 
 settings = Settings()

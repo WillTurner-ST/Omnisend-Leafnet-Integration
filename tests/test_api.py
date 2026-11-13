@@ -11,6 +11,8 @@ def test_health_check_endpoint():
     assert response.status_code == 200
     data = response.json()
     assert data["status"] == "healthy"
+    assert data["contacts_only"] is True
+    assert data["loyalty_enabled"] is False
     assert "integrations" in data
 
 

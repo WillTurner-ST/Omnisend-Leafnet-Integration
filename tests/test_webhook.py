@@ -99,6 +99,8 @@ async def test_order_webhook_deduplication_and_recommendations(temp_db):
     assert res1["order_id"] == "998877"
     assert res1["category_buckets"] == ["gummies"]
     assert res1["recommended_category_bucket"] == "beverages"
+    assert res1["omnisend_order"]["status"] == "skipped"
+    assert res1["omnisend_event"]["status"] == "skipped"
 
     # Second call with same order_id -> skipped as duplicate
     res2 = await service.process_order_completed(order_payload)

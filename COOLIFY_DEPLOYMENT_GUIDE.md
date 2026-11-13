@@ -68,8 +68,10 @@ LEAFNET_API_URL=https://snapdragon-hemp.haimenu.com/api/
 LEAFNET_API_KEY=your_leafnet_api_key_here
 LEAFNET_FOLDER_NAME=snapdragon-hemp
 
-# Segmentation & Loyalty Defaults
+# Segmentation. Loyalty stays off for the first deploy.
 VIP_SPEND_THRESHOLD=500.0
+CONTACTS_ONLY=true
+LOYALTY_ENABLED=false
 
 # Optional Webhook Security
 # If set, incoming webhooks must include header: X-Webhook-Secret: <your_secret>

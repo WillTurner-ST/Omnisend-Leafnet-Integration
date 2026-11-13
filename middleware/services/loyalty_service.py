@@ -29,6 +29,15 @@ class LoyaltyService:
         self.omnisend = omnisend_client or OmnisendClient()
 
     @classmethod
+    def highest_reached_threshold(cls, points: float) -> float:
+        """Highest milestone the customer has already passed, or 0."""
+        reached = 0.0
+        for ms in cls.MILESTONES:
+            if points >= ms["threshold"]:
+                reached = ms["threshold"]
+        return reached
+
+    @classmethod
     def get_milestone_progress(cls, points: float) -> Dict[str, Any]:
         """
         Calculates current loyalty tier and points needed for next milestone

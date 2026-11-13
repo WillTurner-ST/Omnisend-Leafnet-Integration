@@ -60,9 +60,9 @@ def test_contact_mapper_full_record():
     assert "vip" in omnisend_payload.tags
     assert "lapsed-45-days" in omnisend_payload.tags
     assert "category:beverages" in omnisend_payload.tags
-    assert "loyalty-tier-300" in omnisend_payload.tags
-    assert "loyalty-tier-200" in omnisend_payload.tags
-    assert "loyalty-tier-100" in omnisend_payload.tags
+    assert not any(tag.startswith("loyalty-tier-") for tag in omnisend_payload.tags)
+    phone_ident_channels = phone_ident.channels.sms
+    assert phone_ident_channels.status == "nonSubscribed"
 
     # Custom properties check (Goals 1, 4, 5, 6)
     props = omnisend_payload.customProperties
@@ -74,10 +74,10 @@ def test_contact_mapper_full_record():
     assert props["signup_source"] == "in-store-register"
     assert props["home_store"] == "red-bank"
     assert props["lifetime_value"] == 2868.00
+    assert props["days_since_last_visit"] == 50
     assert props["visit_frequency_days"] == 3.5
-    assert props["points_balance"] == 362.94
-    assert props["next_milestone_points"] == 500.0
-    assert props["points_to_next_milestone"] == 137.06
+    assert "points_balance" not in props
+    assert "next_milestone_points" not in props
     assert props["top_category"] == "NON-INF BEVS"
     assert props["top_category_bucket"] == "beverages"
     assert props["opt_status"] == "none"
@@ -96,6 +96,25 @@ def test_category_mapper_buckets_and_recommendations():
     assert "beverages" in rec["all_buckets"]
     assert rec["recommended_bucket"] == "beverages"
     assert len(rec["suggested_categories"]) > 0
+
+
+def test_contact_mapper_includes_loyalty_when_enabled(monkeypatch):
+    from middleware.config import settings
+
+    monkeypatch.setattr(settings, "loyalty_enabled", True)
+    service = ContactSyncService()
+    record = NocoDBCustomerRecord(
+        leafnet_customer_id="20854",
+        email="venus.celeste@example.com",
+        first_name="Venus",
+        last_name="Celeste",
+        points=362.94,
+        favorite_category="NON-INF BEVS",
+    )
+    payload = service.build_omnisend_contact(record)
+    assert "loyalty-tier-300" in payload.tags
+    assert payload.customProperties["points_balance"] == 362.94
+    assert payload.customProperties["next_milestone_points"] == 500.0
 
 
 def test_contact_mapper_blank_email():

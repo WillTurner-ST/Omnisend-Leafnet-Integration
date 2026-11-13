@@ -116,12 +116,14 @@ class ContactSyncService:
         ]
 
         if clean_phone:
+            # Contacts-only import stores the number without opting the customer into SMS.
+            sms_status = "nonSubscribed" if settings.contacts_only or opt_out else "subscribed"
             identifiers.append(
                 OmnisendIdentifier(
                     type="phone",
                     id=clean_phone,
                     channels=OmnisendChannels(
-                        sms=OmnisendChannelStatus(status="subscribed" if not opt_out else "nonSubscribed")
+                        sms=OmnisendChannelStatus(status=sms_status)
                     ),
                 )
             )
@@ -134,9 +136,9 @@ class ContactSyncService:
         if home_store:
             tags.append(f"store:{home_store.lower()}")
 
-        # Signup date & New loyalty signup tag
+        # Signup date. The loyalty welcome tag is only applied when loyalty is on.
         signup_dt = customer.leafnet_created_at or customer.first_visit or ""
-        if self.is_recent_signup(signup_dt, days=7):
+        if settings.loyalty_enabled and self.is_recent_signup(signup_dt, days=7):
             tags.append("new-loyalty-signup")
 
         # Buyer frequency tags (First-time vs Repeat)
@@ -174,14 +176,15 @@ class ContactSyncService:
             if bucket != "general" and tag_name not in tags:
                 tags.append(tag_name)
 
-        # Loyalty milestone tags
         points = customer.float_points
-        for ms in LoyaltyService.MILESTONES:
-            threshold_int = int(ms["threshold"])
-            if points >= ms["threshold"]:
-                tags.append(f"loyalty-tier-{threshold_int}")
+        milestone_progress = None
+        if settings.loyalty_enabled:
+            for ms in LoyaltyService.MILESTONES:
+                threshold_int = int(ms["threshold"])
+                if points >= ms["threshold"]:
+                    tags.append(f"loyalty-tier-{threshold_int}")
+            milestone_progress = LoyaltyService.get_milestone_progress(points)
 
-        milestone_progress = LoyaltyService.get_milestone_progress(points)
         clean_bday = self.clean_birthdate(customer.birth_date)
 
         # Custom Properties (Goals 1, 4, 5, 6)
@@ -202,16 +205,19 @@ class ContactSyncService:
             "lifetime_value": round(lifetime_spend, 2),
             "average_spend": round(customer.float_average_order_value, 2),
             "is_vip": is_vip,
-            "points_balance": round(points, 2),
-            "loyalty_tier_name": milestone_progress["loyalty_tier_name"],
-            "available_reward": milestone_progress["available_reward"],
-            "next_milestone_points": milestone_progress["next_milestone_points"],
-            "points_to_next_milestone": milestone_progress["points_to_next_milestone"],
             "top_category": primary_cat,
             "top_category_bucket": primary_bucket,
             "top_categories": ", ".join(top_cats),
             "opt_status": customer.opt_status or "none",
         }
+        if milestone_progress is not None:
+            custom_props.update({
+                "points_balance": round(points, 2),
+                "loyalty_tier_name": milestone_progress["loyalty_tier_name"],
+                "available_reward": milestone_progress["available_reward"],
+                "next_milestone_points": milestone_progress["next_milestone_points"],
+                "points_to_next_milestone": milestone_progress["points_to_next_milestone"],
+            })
 
         return OmnisendContactPayload(
             identifiers=identifiers,
@@ -329,39 +335,49 @@ class ContactSyncService:
                         prev_milestone = float(prior_state["highest_milestone_notified"]) if prior_state else 0.0
                         welcome_sent = bool(prior_state["welcome_sent"]) if prior_state else False
 
-                        # Trigger Welcome Event if new loyalty signup and not yet welcomed
-                        if not welcome_sent and "new-loyalty-signup" in (payload.tags or []):
-                            try:
-                                welcome_event = OmnisendEventPayload(
-                                    eventName="New Loyalty Signup",
-                                    email=customer.clean_email,
-                                    phone=self.clean_phone_number(customer.phone) or None,
-                                    eventID=f"welcome-signup-{cust_id}",
-                                    properties={
-                                        "leafnet_customer_id": cust_id,
-                                        "first_name": customer.resolved_first_name,
-                                        "home_store": customer.favorite_location or "",
-                                        "points_balance": customer.float_points,
-                                        "signup_date": customer.leafnet_created_at or customer.first_visit or "",
-                                    },
-                                )
-                                await self.omnisend.trigger_event(welcome_event)
-                                welcome_sent = True
-                                new_signups_triggered += 1
-                            except Exception as we:
-                                logger.warning(f"Failed to trigger welcome event for {customer.clean_email}: {we}")
+                        send_loyalty_events = settings.loyalty_enabled and not settings.contacts_only
+                        if send_loyalty_events:
+                            # Trigger Welcome Event if new loyalty signup and not yet welcomed
+                            if not welcome_sent and "new-loyalty-signup" in (payload.tags or []):
+                                try:
+                                    welcome_event = OmnisendEventPayload(
+                                        eventName="New Loyalty Signup",
+                                        email=customer.clean_email,
+                                        phone=self.clean_phone_number(customer.phone) or None,
+                                        eventID=f"welcome-signup-{cust_id}",
+                                        properties={
+                                            "leafnet_customer_id": cust_id,
+                                            "first_name": customer.resolved_first_name,
+                                            "home_store": customer.favorite_location or "",
+                                            "points_balance": customer.float_points,
+                                            "signup_date": customer.leafnet_created_at or customer.first_visit or "",
+                                        },
+                                    )
+                                    await self.omnisend.trigger_event(welcome_event)
+                                    welcome_sent = True
+                                    new_signups_triggered += 1
+                                except Exception as we:
+                                    logger.warning(f"Failed to trigger welcome event for {customer.clean_email}: {we}")
 
-                        # Check & trigger loyalty milestones (100 pts, 200 pts, etc.)
-                        baseline = max(prev_points, prev_milestone)
-                        crossed = await self.loyalty.check_and_trigger_milestones(
-                            email=customer.clean_email,
-                            phone=self.clean_phone_number(customer.phone) or None,
-                            points=customer.float_points,
-                            previous_points=baseline,
-                        )
-                        if crossed:
-                            milestones_triggered += len(crossed)
-                            prev_milestone = max([m["threshold"] for m in crossed])
+                            # Check & trigger loyalty milestones (100 pts, 200 pts, etc.)
+                            baseline = max(prev_points, prev_milestone)
+                            crossed = await self.loyalty.check_and_trigger_milestones(
+                                email=customer.clean_email,
+                                phone=self.clean_phone_number(customer.phone) or None,
+                                points=customer.float_points,
+                                previous_points=baseline,
+                            )
+                            if crossed:
+                                milestones_triggered += len(crossed)
+                                prev_milestone = max([m["threshold"] for m in crossed])
+                        else:
+                            # Remember the tier already reached so turning loyalty on later
+                            # does not email the whole imported list.
+                            prev_milestone = max(
+                                prev_milestone,
+                                LoyaltyService.highest_reached_threshold(customer.float_points),
+                            )
+                            welcome_sent = True
 
                         self.db.upsert_customer_sync_state(
                             leafnet_customer_id=cust_id,

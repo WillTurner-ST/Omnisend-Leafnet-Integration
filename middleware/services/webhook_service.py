@@ -195,43 +195,50 @@ class WebhookService:
                 products=products,
             )
 
-            try:
-                omnisend_order_result = await self.omnisend.create_order(omnisend_order)
-                logger.info(f"Posted order #{order_id} to Omnisend orders API successfully.")
-            except Exception as e:
-                logger.warning(f"Failed to post order #{order_id} to Omnisend orders API: {e}")
+            if settings.contacts_only:
+                logger.info(
+                    f"Contacts-only mode: skipped Omnisend order and purchase event for #{order_id}."
+                )
+                omnisend_order_result = {"status": "skipped", "reason": "contacts_only"}
+                omnisend_event_result = {"status": "skipped", "reason": "contacts_only"}
+            else:
+                try:
+                    omnisend_order_result = await self.omnisend.create_order(omnisend_order)
+                    logger.info(f"Posted order #{order_id} to Omnisend orders API successfully.")
+                except Exception as e:
+                    logger.warning(f"Failed to post order #{order_id} to Omnisend orders API: {e}")
 
-            # Build and trigger Custom Event for instant post-purchase journey & recommendations (Goal 2 & Goal 6)
-            custom_event = OmnisendEventPayload(
-                eventName="Retail Purchase Completed",
-                email=email,
-                phone=phone or None,
-                eventID=f"leafnet-order-{order_id}",
-                properties={
-                    "order_id": order_id,
-                    "leafnet_customer_id": cust_id,
-                    "location": payload.location or "Store",
-                    "total": payload.float_total,
-                    "total_cents": payload.total_cents,
-                    "categories": categories,
-                    "primary_category": primary_category,
-                    "primary_category_bucket": rec_meta["primary_bucket"],
-                    "category_buckets": rec_meta["all_buckets"],
-                    "recommended_category_bucket": rec_meta["recommended_bucket"],
-                    "recommendation_headline": rec_meta["recommendation_headline"],
-                    "suggested_categories": rec_meta["suggested_categories"],
-                    "cashier_name": cashier_name or "Staff",
-                    "cashier_id": cashier_id,
-                    "item_count": sum([p.quantity for p in products]) if products else 1,
-                    "created_at": payload.created or "",
-                },
-            )
+                # Build and trigger Custom Event for instant post-purchase journey & recommendations (Goal 2 & Goal 6)
+                custom_event = OmnisendEventPayload(
+                    eventName="Retail Purchase Completed",
+                    email=email,
+                    phone=phone or None,
+                    eventID=f"leafnet-order-{order_id}",
+                    properties={
+                        "order_id": order_id,
+                        "leafnet_customer_id": cust_id,
+                        "location": payload.location or "Store",
+                        "total": payload.float_total,
+                        "total_cents": payload.total_cents,
+                        "categories": categories,
+                        "primary_category": primary_category,
+                        "primary_category_bucket": rec_meta["primary_bucket"],
+                        "category_buckets": rec_meta["all_buckets"],
+                        "recommended_category_bucket": rec_meta["recommended_bucket"],
+                        "recommendation_headline": rec_meta["recommendation_headline"],
+                        "suggested_categories": rec_meta["suggested_categories"],
+                        "cashier_name": cashier_name or "Staff",
+                        "cashier_id": cashier_id,
+                        "item_count": sum([p.quantity for p in products]) if products else 1,
+                        "created_at": payload.created or "",
+                    },
+                )
 
-            try:
-                omnisend_event_result = await self.omnisend.trigger_event(custom_event)
-                logger.info(f"Triggered custom event for order #{order_id} in Omnisend.")
-            except Exception as e:
-                logger.warning(f"Failed to trigger custom event for order #{order_id}: {e}")
+                try:
+                    omnisend_event_result = await self.omnisend.trigger_event(custom_event)
+                    logger.info(f"Triggered custom event for order #{order_id} in Omnisend.")
+                except Exception as e:
+                    logger.warning(f"Failed to trigger custom event for order #{order_id}: {e}")
 
             # Real-time contact update in Omnisend (Goal 4 & Goal 5)
             try:

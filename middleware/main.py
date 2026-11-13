@@ -76,7 +76,8 @@ app.add_middleware(
 # Register API Routers
 app.include_router(webhooks_router)
 app.include_router(sync_router)
-app.include_router(loyalty_router)
+if settings.loyalty_enabled and not settings.contacts_only:
+    app.include_router(loyalty_router)
 app.include_router(reports_router)
 app.include_router(verify_router)
 
@@ -88,6 +89,8 @@ async def health_check():
         "status": "healthy",
         "environment": settings.environment,
         "scheduler_running": scheduler.running,
+        "contacts_only": settings.contacts_only,
+        "loyalty_enabled": settings.loyalty_enabled,
         "integrations": {
             "omnisend_configured": bool(settings.omnisend_api_key),
             "nocodb_configured": bool(settings.nocodb_api_token and settings.nocodb_table_id),
