@@ -10,6 +10,22 @@ from middleware.models.omnisend import (
 
 logger = logging.getLogger("middleware.omnisend_client")
 
+CURRENT_API_BASE_URL = "https://api.omnisend.com/api"
+
+
+def normalize_omnisend_base_url(url: Optional[str]) -> str:
+    """Map retired /v3 and /v5 bases onto the current /api base."""
+    cleaned = (url or CURRENT_API_BASE_URL).rstrip("/")
+    if cleaned.endswith("/v3") or cleaned.endswith("/v5"):
+        logger.warning(
+            "Omnisend base URL %s is a retired path. Using %s with Omnisend-Version %s.",
+            cleaned,
+            CURRENT_API_BASE_URL,
+            settings.omnisend_api_version,
+        )
+        return CURRENT_API_BASE_URL
+    return cleaned
+
 
 class OmnisendClient:
     def __init__(
@@ -18,12 +34,13 @@ class OmnisendClient:
         base_url: Optional[str] = None,
     ):
         self.api_key = api_key or settings.omnisend_api_key
-        self.base_url = (base_url or settings.omnisend_base_url).rstrip("/")
+        self.base_url = normalize_omnisend_base_url(base_url or settings.omnisend_base_url)
 
     @property
     def headers(self) -> Dict[str, str]:
         return {
-            "X-API-KEY": self.api_key,
+            "Authorization": f"Omnisend-API-Key {self.api_key}",
+            "Omnisend-Version": settings.omnisend_api_version,
             "Accept": "application/json",
             "Content-Type": "application/json",
         }

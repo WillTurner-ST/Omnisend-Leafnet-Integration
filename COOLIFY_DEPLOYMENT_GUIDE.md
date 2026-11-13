@@ -53,7 +53,8 @@ DB_PATH=/app/data/middleware.db
 
 # Omnisend API Configuration
 OMNISEND_API_KEY=your_actual_omnisend_api_key
-OMNISEND_BASE_URL=https://api.omnisend.com/v3
+OMNISEND_BASE_URL=https://api.omnisend.com/api
+OMNISEND_API_VERSION=2026-03-15
 
 # NocoDB Configuration
 # If NocoDB is in the same Coolify Docker network, you can use: http://<nocodb-container-name>:8080

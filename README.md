@@ -154,6 +154,8 @@ Key environment variables:
 ```ini
 # Omnisend Credentials
 OMNISEND_API_KEY=your_omnisend_api_key_here
+OMNISEND_BASE_URL=https://api.omnisend.com/api
+OMNISEND_API_VERSION=2026-03-15
 
 # NocoDB Configuration
 NOCODB_API_URL=https://app.nocodb.com

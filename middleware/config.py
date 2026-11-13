@@ -32,7 +32,10 @@ class Settings(BaseModel):
     # Omnisend API Configuration
     omnisend_api_key: str = Field(default_factory=lambda: os.getenv("OMNISEND_API_KEY", ""))
     omnisend_base_url: str = Field(
-        default_factory=lambda: os.getenv("OMNISEND_BASE_URL", "https://api.omnisend.com/v3")
+        default_factory=lambda: os.getenv("OMNISEND_BASE_URL", "https://api.omnisend.com/api")
+    )
+    omnisend_api_version: str = Field(
+        default_factory=lambda: os.getenv("OMNISEND_API_VERSION", "2026-03-15")
     )
 
     # NocoDB API Configuration

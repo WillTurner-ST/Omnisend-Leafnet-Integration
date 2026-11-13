@@ -1,9 +1,19 @@
 import pytest
 import uuid
 from fastapi.testclient import TestClient
+from middleware.clients.omnisend_client import OmnisendClient, normalize_omnisend_base_url
 from middleware.main import app
 
 client = TestClient(app)
+
+
+def test_omnisend_client_uses_current_api():
+    assert normalize_omnisend_base_url("https://api.omnisend.com/v3") == "https://api.omnisend.com/api"
+    assert normalize_omnisend_base_url("https://api.omnisend.com/api/") == "https://api.omnisend.com/api"
+    client = OmnisendClient(api_key="test-key", base_url="https://api.omnisend.com/v3")
+    assert client.base_url == "https://api.omnisend.com/api"
+    assert client.headers["Authorization"] == "Omnisend-API-Key test-key"
+    assert client.headers["Omnisend-Version"] == "2026-03-15"
 
 
 def test_health_check_endpoint():

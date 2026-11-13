@@ -16,6 +16,8 @@ class OmnisendIdentifier(BaseModel):
     type: str  # 'email' or 'phone'
     id: str
     channels: Optional[OmnisendChannels] = None
+    # Current API sends a welcome when this is omitted and the channel is subscribed.
+    sendWelcomeMessage: bool = False
 
 
 class OmnisendContactCustomProperties(BaseModel):

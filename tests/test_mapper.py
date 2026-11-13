@@ -50,6 +50,7 @@ def test_contact_mapper_full_record():
 
     assert email_ident.id == "venus.celeste@example.com"
     assert email_ident.channels.email.status == "subscribed"
+    assert email_ident.sendWelcomeMessage is False
     assert phone_ident.id == "+14237131503"
 
     # Tags check (Goal 5)
