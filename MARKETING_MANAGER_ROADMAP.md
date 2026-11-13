@@ -26,7 +26,7 @@ This document is the step-by-step, reproducible roadmap for rolling out **Leafne
    - `NOCODB_API_URL`, `NOCODB_API_TOKEN`, `NOCODB_TABLE_ID`: From the NocoDB `Leafnet Customers` table.
    - `LEAFNET_API_KEY`, `LEAFNET_FOLDER_NAME`: Confirmed (`snapdragon-hemp`).
 2. **Deploy Middleware Container:**
-   - Deploy via `docker-compose up -d --build` (or Railway / Render / Fly.io) with HTTPS enabled (e.g. `https://retail-sync.yourdomain.com`).
+   - Deploy from the Dockerfile on Coolify (or Railway / Render / Fly.io) with HTTPS enabled (e.g. `https://retail-sync.yourdomain.com`).
 3. **Run Verification & Initial Sync:**
    - Run `python -m middleware.cli verify --customer-id 20854` on 5–10 known customers to verify NocoDB $\leftrightarrow$ Leafnet parity.
    - Run `python -m middleware.cli sync --full` to push the initial retail customer base into Omnisend.

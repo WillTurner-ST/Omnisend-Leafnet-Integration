@@ -20,7 +20,7 @@ Before deploying in Coolify, ensure you have:
 
 ## 2. Deploying on Coolify (Step-by-Step)
 
-### Option A: Deploy via Git Repository (Recommended)
+### Deploy via Git Repository
 1. Commit and push your code to your Git server (GitHub, GitLab, or Gitea):
    ```bash
    git add .
@@ -32,16 +32,9 @@ Before deploying in Coolify, ensure you have:
 4. Click **+ New Resource** $\rightarrow$ **Application**.
 5. Select **Public Repository** or **Private Git Repository** (choose your Git provider).
 6. Enter your repository URL (e.g. `https://github.com/your-org/leafnet-omnisend-middleware` or your internal Gitea URL) and branch `main`.
-7. **Build Pack:** Coolify will automatically detect the `Dockerfile`.
-   - Ensure the Build Pack is set to **Dockerfile**.
+7. **Build Pack:** Coolify detects the `Dockerfile` because the repository has no Compose file.
+   - Set the Build Pack to **Dockerfile** if the scan has not already selected it.
    - **Port Exposes:** Enter `8000`.
-
----
-
-### Option B: Deploy via Docker Compose in Coolify
-If you prefer Docker Compose:
-1. Click **+ New Resource** $\rightarrow$ **Application** $\rightarrow$ **Docker Compose**.
-2. Paste the contents of `docker-compose.yml`.
 
 ---
 
