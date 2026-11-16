@@ -3,7 +3,7 @@ import re
 from datetime import datetime, timezone
 from typing import Optional, List, Dict, Any
 from middleware.config import settings
-from middleware.clients.nocodb_client import NocoDBClient
+from middleware.clients.nocodb_client import NocoDBClient, normalize_nocodb_datetime
 from middleware.clients.omnisend_client import OmnisendClient
 from middleware.database.db import Database
 from middleware.models.nocodb import NocoDBCustomerRecord
@@ -242,7 +242,7 @@ class ContactSyncService:
 
         since_timestamp = None
         if not full_sync:
-            since_timestamp = self.db.get_cursor("last_leafnet_updated_at")
+            since_timestamp = normalize_nocodb_datetime(self.db.get_cursor("last_leafnet_updated_at"))
             logger.info(f"Incremental sync requested. Cursor since: {since_timestamp}")
 
         errors: List[str] = []
@@ -268,9 +268,9 @@ class ContactSyncService:
                 customer = NocoDBCustomerRecord(**raw_row)
 
                 # Track latest updated_at for cursor
-                if customer.leafnet_updated_at:
-                    if not latest_updated_at or customer.leafnet_updated_at > latest_updated_at:
-                        latest_updated_at = customer.leafnet_updated_at
+                updated_at = normalize_nocodb_datetime(customer.leafnet_updated_at)
+                if updated_at and (not latest_updated_at or updated_at > latest_updated_at):
+                    latest_updated_at = updated_at
 
                 cust_id = str(customer.leafnet_customer_id or customer.Id or "")
 
